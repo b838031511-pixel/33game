@@ -68,16 +68,13 @@
     <script>
 // ЗАГРУЗИЛИ БУТЫЛКУ (Убрали зависимость от успешной предзагрузки для старта)
 const IMAGES_SRC = {
-    // В песочнице иногда загруженные файлы недоступны напрямую в iframe из-за CORS
-    // Поэтому пока уберем файл бутылки, чтобы она рисовалась как зеленый квадрат,
-    // пока ты не скачаешь код на свой ПК.
-    item1: null, 
+    playerRun: 'run.png',
+    playerJump: 'jump.png',
+    playerDuck: 'seat.png',
+    item1: 'приз.png',
     
-    bgSky: null, bgCity: null, bgPath: null,
-    playerRun: null, playerJump: null, playerDuck: null, playerDead: null,
-    item2: null, item5: null,
-    obsBottom: null, obsTop1: null, obsTop2: null,
-    cat: null
+    bgSky: null, bgCity: null, bgPath: null, playerDead: null,
+    item2: null, item5: null, obsBottom: null, obsTop1: null, obsTop2: null, cat: null
 };
 
 const images = {};
@@ -112,9 +109,9 @@ class Player {
     constructor() {
         this.x = 150;
         this.y = GROUND_Y;
-        this.normalWidth = 60;
-        this.normalHeight = 120;
-        this.duckHeight = 50; 
+        this.normalWidth = 100;
+        this.normalHeight = 100;
+        this.duckHeight = 60; 
         
         this.width = this.normalWidth;
         this.height = this.normalHeight;
