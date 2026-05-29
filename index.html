@@ -191,11 +191,21 @@ class Player {
             ctx.rotate(this.rotation);
             ctx.translate(-(this.x + this.width/2), -(this.y + this.height/2));
         }
-        ctx.fillStyle = this.isDead ? 'red' : (this.isDucking ? 'purple' : 'blue');
-        ctx.fillRect(this.x, this.y, this.width, this.height);
         
-        ctx.fillStyle = '#ffcc99';
-        ctx.fillRect(this.x - 10, this.y - (this.isDucking?10:20), this.width + 20, this.isDucking?40:60);
+        // Рисуем картинки чибика
+        if (this.isDucking && images.playerDuck && images.playerDuck.complete) {
+            ctx.drawImage(images.playerDuck, this.x, this.y, this.width, this.height);
+        } else if (this.isJumping && images.playerJump && images.playerJump.complete) {
+            ctx.drawImage(images.playerJump, this.x, this.y, this.width, this.height);
+        } else if (!this.isDead && !this.isJumping && !this.isDucking && images.playerRun && images.playerRun.complete) {
+            ctx.drawImage(images.playerRun, this.x, this.y, this.width, this.height);
+        } else {
+            // Запасной вариант (квадратики), если картинка не найдена
+            ctx.fillStyle = this.isDead ? 'red' : (this.isDucking ? 'purple' : 'blue');
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.fillStyle = '#ffcc99';
+            ctx.fillRect(this.x - 10, this.y - (this.isDucking?10:20), this.width + 20, this.isDucking?40:60);
+        }
         
         ctx.restore();
     }
@@ -239,11 +249,11 @@ class Item {
         this.scoreValue = scoreValue;
         this.x = forceX || CANVAS_WIDTH;
         this.y = forceY || (GROUND_Y - player.normalHeight - 120); 
-        this.width = 40;
+        this.width = (this.scoreValue === 1 && images.item1) ? 35 : 40;
         
         // Для бутылки пива делаем пропорции более вытянутыми
-        this.height = (this.scoreValue === 1 && images.item1) ? 70 : 40; 
-        if (this.scoreValue === 1 && images.item1) this.y -= 30; 
+        this.height = (this.scoreValue === 1 && images.item1) ? 100 : 40; 
+        if (this.scoreValue === 1 && images.item1) this.y -= 60; 
     }
     update() {
         if (gameState === 'PLAYING') this.x -= gameSpeed;
