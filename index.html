@@ -108,13 +108,13 @@ let items = [];
 class Player {
     constructor() {
         this.x = 150;
-        this.y = GROUND_Y;
-        this.normalWidth = 100;
-        this.normalHeight = 100;
+        this.normalWidth = 60; // Возвращаем строгие хитбоксы, чтобы было честно играть
+        this.normalHeight = 120;
         this.duckHeight = 60; 
         
         this.width = this.normalWidth;
         this.height = this.normalHeight;
+        this.y = GROUND_Y - this.normalHeight; // ИСПРАВЛЕНИЕ: точная позиция старта
         
         this.vy = 0;
         this.gravity = 0.6;
