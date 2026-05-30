@@ -333,8 +333,13 @@ function togglePause() {
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
         e.preventDefault();
-        if (gameState === 'PLAYING' || gameState === 'PAUSED') togglePause();
+        if (gameState === 'PLAYING' || gameState === 'PAUSED') {
+            togglePause();
+        } else if (gameState === 'GAME_OVER' || gameState === 'WIN_ANIMATION') {
+            fullRestart(); // Рестарт по пробелу после смерти/победы
+        }
     }
+    // ... остальной код (прыжок и присед)
     if (gameState !== 'PLAYING') return;
 
     if (e.code === 'ArrowUp' || e.code === 'KeyW') player.jump();
