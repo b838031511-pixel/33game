@@ -488,20 +488,13 @@ function updateUI() {
 
 let bgOffset = 0;
 function drawBackground() {
+    // В будущем тут будут твои картинки (bgSky, bgCity, bgPath)
     ctx.fillStyle = '#87CEEB';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    if (gameState === 'PLAYING') bgOffset -= gameSpeed * 0.5;
-    if (bgOffset <= -CANVAS_WIDTH) bgOffset = 0;
-
     ctx.fillStyle = '#A9A9A9';
-    ctx.fillRect(bgOffset, GROUND_Y - 250, CANVAS_WIDTH, 250);
-    ctx.fillRect(bgOffset + CANVAS_WIDTH, GROUND_Y - 250, CANVAS_WIDTH, 250);
-    
+    ctx.fillRect(0, GROUND_Y - 250, CANVAS_WIDTH, 250);
     ctx.fillStyle = '#2E8B57';
-    ctx.fillRect(bgOffset * 1.5, GROUND_Y - 150, CANVAS_WIDTH, 150);
-    ctx.fillRect(bgOffset * 1.5 + CANVAS_WIDTH, GROUND_Y - 150, CANVAS_WIDTH, 150);
-
+    ctx.fillRect(0, GROUND_Y - 150, CANVAS_WIDTH, 150);
     ctx.fillStyle = '#8B4513';
     ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
 }
