@@ -301,13 +301,15 @@ function handleSpawning() {
         return;
     }
 
-    const typeRoll = Math.random();
+     const typeRoll = Math.random();
     if (typeRoll < 0.6) {
         let spawnTop = Math.random() > 0.5;
         if (lastObstacleWasTop) spawnTop = false;
         obstacles.push(new Obstacle(spawnTop, Math.random() > 0.5 ? 1 : 2));
         lastObstacleWasTop = spawnTop;
-        spawnDistanceQueue = Math.random() * 200 + 400;
+        // БЫЛО: Math.random() * 200 + 400;
+        // СТАЛО: (Минимум 600 пикселей между препятствиями)
+        spawnDistanceQueue = Math.random() * 200 + 600; 
     } else {
         let scoreVal = Math.random() < 0.714 ? 1 : 2;
         items.push(new Item(scoreVal));
