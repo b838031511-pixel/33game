@@ -12,16 +12,24 @@
             position: relative; 
             width: 100vw; 
             height: 100vh; 
-            background-color: #87CEEB; 
+            background-color: #0b1a30; 
             overflow: hidden; 
             box-shadow: 0 0 20px rgba(0,0,0,0.8); 
         }
         canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
         
+        #park-sign { 
+            position: absolute; 
+            top: 10px; 
+            right: 20px; 
+            width: 300px; 
+            height: auto;
+            pointer-events: none; 
+            z-index: 5; 
+        }
+        
         #ui-layer { position: absolute; top: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #fff; text-shadow: 3px 3px 0 #000; pointer-events: none; z-index: 10; }
         #lives-display { margin-top: 10px; }
-        
-        #park-sign { position: absolute; top: 20px; right: 20px; font-size: 36px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #8B0000, -1px -1px 0 #000; border: 4px solid #8B0000; background: rgba(255, 255, 255, 0.2); padding: 5px 15px; transform: rotate(2deg); pointer-events: none; z-index: 5; }
         
         #controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 10; }
         .control-btn { background: rgba(255, 255, 255, 0.3); border: 2px solid white; border-radius: 10px; color: white; font-size: 20px; font-weight: bold; padding: 20px 40px; cursor: pointer; backdrop-filter: blur(5px); touch-action: manipulation; }
@@ -38,7 +46,7 @@
         
         @media (max-width: 800px) { 
             #ui-layer { font-size: 20px; } 
-            #park-sign { font-size: 22px; top: 10px; right: 10px; } 
+            #park-sign { width: 200px; right: 10px; } 
             .control-btn { font-size: 16px; padding: 15px 20px; } 
             #controls { padding: 0 10px; }
         }
@@ -46,14 +54,14 @@
 </head>
 <body>
     <div id="game-container">
+        <img id="park-sign" src="Мечта.png" alt="Мечта">
+        
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui-layer">
             <div id="score-display">Очки: <span id="score">0</span> / 33</div>
             <div id="lives-display">Жизни: <span id="lives">❤️❤️❤️</span></div>
         </div>
-
-        <div id="park-sign">Парк "МЕЧТА"</div>
 
         <div id="controls">
             <button id="btn-duck" class="control-btn">ПРИСЕСТЬ (S / Вниз)</button>
@@ -96,7 +104,9 @@ const IMAGES_SRC = {
     obsTop2: 'гоп.png',
     cat: 'cat.png',
     
-    bgSky: null, bgCity: null, bgPath: null
+    // ИСПРАВЛЕНО НА .png
+    bgSky: 'ФонС.png',      
+    bgPath: 'беседка.png'   
 };
 
 const images = {};
@@ -240,25 +250,9 @@ class Player {
         } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
             ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
-            
-            // ВЫБОР КАДРА БЕГА
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
-            
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
-                // ПРОГРАММНАЯ ПОДГОНКА ВТОРОГО КАДРА (ЧТОБЫ НЕ МОРГАЛ И НЕ СУЖАЛСЯ)
-                // Если рисуется run2, мы делаем его чуть меньше и сдвигаем правее/ниже.
-                // ЭТИ ЦИФРЫ МОЖНО МЕНЯТЬ!
-                let tweakX = (runImg === images.playerRun2) ? 10 : 0;  // Сдвиг вправо
-                let tweakY = (runImg === images.playerRun2) ? 5 : 0;   // Сдвиг вниз
-                let tweakW = (runImg === images.playerRun2) ? -20 : 0; // Сжимаем его на 20px
-                
-                ctx.drawImage(
-                    runImg, 
-                    this.x + offsetX + tweakX, 
-                    this.y + offsetY + tweakY, 
-                    drawW + tweakW, 
-                    drawH + tweakW
-                );
+                ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
             } else {
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -584,15 +578,42 @@ function updateUI() {
     document.getElementById('lives').innerText = hearts;
 }
 
+let skyOffset = 0;
+let pathOffset = 0;
+
 function drawBackground() {
-    ctx.fillStyle = '#87CEEB';
+    ctx.fillStyle = '#0b1a30';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    ctx.fillStyle = '#A9A9A9';
-    ctx.fillRect(0, GROUND_Y - 250, CANVAS_WIDTH, 250);
-    ctx.fillStyle = '#2E8B57';
-    ctx.fillRect(0, GROUND_Y - 150, CANVAS_WIDTH, 150);
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+    
+    if (gameState === 'PLAYING') skyOffset -= gameSpeed * 0.2;
+    
+    if (images.bgSky && images.bgSky.complete && images.bgSky.naturalHeight !== 0) {
+        let imgAspect = images.bgSky.width / images.bgSky.height;
+        let drawH = CANVAS_HEIGHT;
+        let drawW = drawH * imgAspect;
+        
+        if (skyOffset <= -drawW) skyOffset = 0; 
+        
+        ctx.drawImage(images.bgSky, skyOffset, 0, drawW, drawH);
+        ctx.drawImage(images.bgSky, skyOffset + drawW, 0, drawW, drawH); 
+    }
+
+    if (gameState === 'PLAYING') pathOffset -= gameSpeed;
+    
+    if (images.bgPath && images.bgPath.complete && images.bgPath.naturalHeight !== 0) {
+        let drawH = CANVAS_HEIGHT * 0.5; 
+        let imgAspect = images.bgPath.width / images.bgPath.height;
+        let drawW = drawH * imgAspect;
+        let drawY = GROUND_Y - drawH + 30; 
+        
+        if (pathOffset <= -drawW) pathOffset = 0; 
+        
+        ctx.drawImage(images.bgPath, pathOffset, drawY, drawW, drawH);
+        ctx.drawImage(images.bgPath, pathOffset + drawW, drawY, drawW, drawH); 
+    } else {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+    }
 }
 
 function gameLoop() {
@@ -637,5 +658,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a045dfdc9cf41add',t:'MTc4MDIyOTQxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0464270ae855925',t:'MTc4MDIzMzQ1NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
