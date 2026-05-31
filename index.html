@@ -18,14 +18,14 @@
         }
         canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
         
-        /* ИСПРАВЛЕНИЕ: ВЫВЕСКА МЕЧТА ОГРОМНАЯ И ВПРИТЫК К ВЕРХУ */
+        /* ИСПРАВЛЕНИЕ: МЕЧТА ПОВЕШЕНА СВЕРХУ И РАСТЯНУТА */
         #park-sign { 
             position: absolute; 
-            top: 0;           /* Впритык к верхнему краю */
+            top: 0; 
             left: 50%;
             transform: translateX(-50%);
-            width: 90vw;      /* Занимает почти всю ширину экрана */
-            max-width: 1200px; /* Ограничение для очень широких мониторов */
+            width: 80vw; /* Занимает 80% ширины экрана, чтобы закрывать поля, но не вылезать */
+            max-width: 1000px; /* Ограничение, чтобы не было гигантской на больших мониторах */
             height: auto;
             pointer-events: none; 
             z-index: 5; 
@@ -34,8 +34,8 @@
         #ui-layer { position: absolute; top: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #fff; text-shadow: 3px 3px 0 #000; pointer-events: none; z-index: 10; }
         #lives-display { margin-top: 10px; }
         
-        /* ИСПРАВЛЕНИЕ: КНОПКИ ПОВЕРХ ОСТРОВКОВ */
-        #controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 15; /* Подняли Z-index */ }
+        /* ИСПРАВЛЕНИЕ: КНОПКИ ВЕРНУЛИ НА МЕСТО */
+        #controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 10; }
         .control-btn { background: rgba(255, 255, 255, 0.3); border: 2px solid white; border-radius: 10px; color: white; font-size: 20px; font-weight: bold; padding: 20px 40px; cursor: pointer; backdrop-filter: blur(5px); touch-action: manipulation; }
         .control-btn:active { background: rgba(255, 255, 255, 0.6); }
         
@@ -50,7 +50,7 @@
         
         @media (max-width: 800px) { 
             #ui-layer { font-size: 20px; } 
-            #park-sign { width: 100vw; } /* На телефоне вывеска на 100% ширины */
+            #park-sign { width: 100vw; } /* На мобилках вывеска на 100% ширины */
             .control-btn { font-size: 16px; padding: 15px 20px; } 
             #controls { padding: 0 10px; }
         }
@@ -58,6 +58,7 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- Вывеска МЕЧТА -->
         <img id="park-sign" src="Мечта.png" alt="Мечта">
         
         <canvas id="gameCanvas"></canvas>
@@ -91,6 +92,7 @@
     </div>
 
     <script>
+// ПОДКЛЮЧЕНИЕ ВСЕХ КАРТИНОК
 const IMAGES_SRC = {
     playerRun1: 'run1.png',
     playerRun2: 'run2.png',
@@ -107,8 +109,9 @@ const IMAGES_SRC = {
     obsTop2: 'гоп.png',
     cat: 'cat.png',
     
-    bgSky: 'беседка.png',   
-    bgPath: 'ФонС.png'      
+    // ВЕРНУЛ ФОНЫ КАК В ПРОШЛОЙ ВЕРСИИ
+    bgSky: 'ФонС.png',      
+    bgPath: 'беседка.png'   
 };
 
 const images = {};
@@ -252,17 +255,9 @@ class Player {
         } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
             ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
-            
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
-            
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
-                ctx.drawImage(
-                    runImg, 
-                    this.x + offsetX, 
-                    this.y + offsetY, 
-                    drawW, 
-                    drawH
-                );
+                ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
             } else {
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -588,36 +583,44 @@ function updateUI() {
     document.getElementById('lives').innerText = hearts;
 }
 
-let bgOffset = 0; 
+// ВЕРНУЛ ФОНЫ К ПРЕДЫДУЩЕЙ ВЕРСИИ
+let skyOffset = 0;
+let pathOffset = 0;
 
 function drawBackground() {
     ctx.fillStyle = '#0b1a30';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
-    if (gameState === 'PLAYING') bgOffset -= gameSpeed;
+    // ДАЛЬНИЙ ФОН
+    if (gameState === 'PLAYING') skyOffset -= gameSpeed * 0.2;
     
     if (images.bgSky && images.bgSky.complete && images.bgSky.naturalHeight !== 0) {
-        let drawH = CANVAS_HEIGHT * 0.85; 
         let imgAspect = images.bgSky.width / images.bgSky.height;
+        let drawH = CANVAS_HEIGHT;
         let drawW = drawH * imgAspect;
         
-        if (bgOffset <= -drawW) bgOffset = 0; 
+        if (skyOffset <= -drawW) skyOffset = 0; 
         
-        ctx.drawImage(images.bgSky, bgOffset, 0, drawW, drawH);
-        ctx.drawImage(images.bgSky, bgOffset + drawW, 0, drawW, drawH); 
+        ctx.drawImage(images.bgSky, skyOffset, 0, drawW, drawH);
+        ctx.drawImage(images.bgSky, skyOffset + drawW, 0, drawW, drawH); 
     }
 
-    // ИСПРАВЛЕНИЕ 1: Островки рисуются ДО земли (спускаем их вниз)
+    // БЛИЖНИЙ ФОН
+    if (gameState === 'PLAYING') pathOffset -= gameSpeed;
+    
     if (images.bgPath && images.bgPath.complete && images.bgPath.naturalHeight !== 0) {
-        // Делаем кусты повыше, чтобы они перекрывали зону кнопок
-        let drawH = CANVAS_HEIGHT * 0.35; 
-        let drawW = drawH * (images.bgPath.width / images.bgPath.height);
+        let drawH = CANVAS_HEIGHT * 0.5; 
+        let imgAspect = images.bgPath.width / images.bgPath.height;
+        let drawW = drawH * imgAspect;
+        let drawY = GROUND_Y - drawH + 30; 
         
-        // Опускаем их так, чтобы они закрывали нижнюю часть экрана
-        let drawY = CANVAS_HEIGHT - drawH; 
+        if (pathOffset <= -drawW) pathOffset = 0; 
         
-        ctx.drawImage(images.bgPath, 0, drawY, drawW, drawH);
-        ctx.drawImage(images.bgPath, CANVAS_WIDTH - drawW, drawY, drawW, drawH);
+        ctx.drawImage(images.bgPath, pathOffset, drawY, drawW, drawH);
+        ctx.drawImage(images.bgPath, pathOffset + drawW, drawY, drawW, drawH); 
+    } else {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
     }
 }
 
@@ -663,5 +666,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0466e8d6ba6910e',t:'MTc4MDIzNTI2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a046825daee2910e',t:'MTc4MDIzNjA3Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
