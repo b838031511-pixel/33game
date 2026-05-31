@@ -3,33 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- ИСПРАВЛЕНИЕ: НАЗВАНИЕ ВКЛАДКИ БРАУЗЕРА -->
     <title>Иисусий возраст</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { background-color: #222; color: white; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 1000px; max-height: 600px; background-color: #87CEEB; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        
+        /* ИСПРАВЛЕНИЕ: ОКОШКО ИГРЫ ТЕПЕРЬ ЗАНИМАЕТ ВЕСЬ ЭКРАН */
+        #game-container { 
+            position: relative; 
+            width: 100vw; 
+            height: 100vh; 
+            /* Убраны жесткие max-width и max-height, теперь игра масштабируется */
+            background-color: #87CEEB; 
+            overflow: hidden; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8); 
+        }
         canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
         
-        #ui-layer { position: absolute; top: 20px; left: 20px; font-size: 24px; font-weight: bold; color: #fff; text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 10; }
+        #ui-layer { position: absolute; top: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #fff; text-shadow: 3px 3px 0 #000; pointer-events: none; z-index: 10; }
         #lives-display { margin-top: 10px; }
         
-        #park-sign { position: absolute; top: 20px; right: 20px; font-size: 30px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #8B0000, -1px -1px 0 #000; border: 4px solid #8B0000; background: rgba(255, 255, 255, 0.2); padding: 5px 15px; transform: rotate(2deg); pointer-events: none; z-index: 5; }
+        #park-sign { position: absolute; top: 20px; right: 20px; font-size: 36px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #8B0000, -1px -1px 0 #000; border: 4px solid #8B0000; background: rgba(255, 255, 255, 0.2); padding: 5px 15px; transform: rotate(2deg); pointer-events: none; z-index: 5; }
         
-        #controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; z-index: 10; }
-        .control-btn { background: rgba(255, 255, 255, 0.3); border: 2px solid white; border-radius: 10px; color: white; font-size: 16px; font-weight: bold; padding: 15px 30px; cursor: pointer; backdrop-filter: blur(5px); touch-action: manipulation; }
+        #controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 10; }
+        .control-btn { background: rgba(255, 255, 255, 0.3); border: 2px solid white; border-radius: 10px; color: white; font-size: 20px; font-weight: bold; padding: 20px 40px; cursor: pointer; backdrop-filter: blur(5px); touch-action: manipulation; }
         .control-btn:active { background: rgba(255, 255, 255, 0.6); }
         
         #win-screen, #game-over-screen, #pause-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
-        #win-screen h1, #game-over-screen h1, #pause-screen h1 { font-size: 50px; color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; text-align: center;}
-        #win-screen p, #game-over-screen p, #pause-screen p { font-size: 24px; margin-bottom: 30px; text-align: center;}
-        #win-screen button, #game-over-screen button { background: #FFD700; color: #000; border: none; padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+        #win-screen h1, #game-over-screen h1, #pause-screen h1 { font-size: 60px; color: #FFD700; margin-bottom: 20px; text-shadow: 3px 3px 0 #000; text-align: center;}
+        #win-screen p, #game-over-screen p, #pause-screen p { font-size: 30px; margin-bottom: 30px; text-align: center;}
+        #win-screen button, #game-over-screen button { background: #FFD700; color: #000; border: none; padding: 20px 40px; font-size: 24px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.2s; }
         #win-screen button:hover, #game-over-screen button:hover { background: #FFF; }
         
         #pause-screen { cursor: pointer; }
         .hidden { display: none !important; }
         
-        @media (max-width: 600px) { #ui-layer { font-size: 18px; } #park-sign { font-size: 20px; top: 10px; right: 10px; } .control-btn { font-size: 14px; padding: 10px 15px; } }
+        @media (max-width: 800px) { 
+            #ui-layer { font-size: 20px; } 
+            #park-sign { font-size: 22px; top: 10px; right: 10px; } 
+            .control-btn { font-size: 16px; padding: 15px 20px; } 
+            #controls { padding: 0 10px; }
+        }
     </style>
 </head>
 <body>
@@ -67,7 +81,6 @@
     </div>
 
     <script>
-// ПОДКЛЮЧЕНИЕ ВСЕХ КАРТИНОК
 const IMAGES_SRC = {
     playerRun1: 'run1.png',
     playerRun2: 'run2.png',
@@ -80,7 +93,7 @@ const IMAGES_SRC = {
     item2: 'шпека.png',
     item5: 'билеты.png',
     obsBottom: 'урна.png',
-    obsTop1: 'коп.png',
+    obsTop1: 'Коп.png',
     obsTop2: 'гоп.png',
     cat: 'cat.png',
     
@@ -101,28 +114,44 @@ for (let key in IMAGES_SRC) {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 600;
+// ИСПРАВЛЕНИЕ: ДИНАМИЧЕСКИЙ РАЗМЕР ХОЛСТА (ПОД ЭКРАН)
+let CANVAS_WIDTH = window.innerWidth;
+let CANVAS_HEIGHT = window.innerHeight;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
-const GROUND_Y = 500;
+// Земля всегда находится на 85% высоты экрана
+let GROUND_Y = CANVAS_HEIGHT * 0.85;
+
+window.addEventListener('resize', () => {
+    CANVAS_WIDTH = window.innerWidth;
+    CANVAS_HEIGHT = window.innerHeight;
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+    GROUND_Y = CANVAS_HEIGHT * 0.85;
+    player.y = GROUND_Y - player.height;
+});
 
 let gameState = 'PLAYING';
 let score = 0;
 let lives = 3;
-let gameSpeed = 6;
 let frameCount = 0;
+
+// ИСПРАВЛЕНИЕ: ГЛОБАЛЬНАЯ СКОРОСТЬ
+// Теперь gameSpeed сохраняется глобально на всё время, пока открыта вкладка
+let gameSpeed = 5.0; // Стартовая, самая медленная скорость
+const MAX_SPEED = 14.0; // Максимальная скорость
+const SPEED_INCREMENT = 0.002; // Насколько скорость растет каждый кадр (очень плавно)
 
 let obstacles = [];
 let items = [];
 
 class Player {
     constructor() {
-        this.x = 150;
-        this.normalWidth = 60; // Строгий хитбокс по ширине
-        this.normalHeight = 120; // Строгий хитбокс стоя
-        this.duckHeight = 60;    // Строгий хитбокс сидя
+        this.x = CANVAS_WIDTH * 0.15; // Игрок всегда на 15% экрана слева
+        this.normalWidth = 60; 
+        this.normalHeight = 120; 
+        this.duckHeight = 60;    
         
         this.width = this.normalWidth;
         this.height = this.normalHeight;
@@ -204,10 +233,10 @@ class Player {
             ctx.translate(-(this.x + this.width/2), -(this.y + this.height/2));
         }
         
-        const drawW = 140; // Ширина картинки (больше хитбокса)
-        const drawH = 140; // Высота картинки
-        const offsetX = -40; // Сдвиг влево для центрирования
-        const offsetY = this.isDucking ? -80 : -20; // Сдвиг вверх
+        const drawW = 140; 
+        const drawH = 140; 
+        const offsetX = -40; 
+        const offsetY = this.isDucking ? -80 : -20; 
         
         if (this.isDead && images.playerDead && images.playerDead.complete && images.playerDead.naturalHeight !== 0) {
             ctx.drawImage(images.playerDead, this.x + offsetX, this.y + offsetY, drawW, drawH);
@@ -216,7 +245,6 @@ class Player {
         } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
             ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
-            // Анимация бега (смена двух кадров каждые 10 тиков)
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
                 ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
@@ -238,25 +266,21 @@ class Obstacle {
         this.isTop = isTop;
         this.x = CANVAS_WIDTH;
         if (this.isTop) {
-            // КОП И ГОП (Огромные, стоят на земле)
             this.width = 160; 
             this.height = 320; 
-            this.y = GROUND_Y - this.height; // Стоят ровно на земле
+            this.y = GROUND_Y - this.height; 
             this.type = type === 1 ? 'police' : 'drunk';
             
-            // ХИТБОКС (только туловище, ноги безопасны для проезда)
-            this.hitXOffset = 50;  // Отступ слева от края картинки
-            this.hitWidth = 60;    // Ширина самого тела для удара
-            this.hitYOffset = 0;   // От макушки
-            this.hitHeight = this.height - 80; // Снизу 80 пикселей пустоты, чтобы игрок мог проехать
+            this.hitXOffset = 50;  
+            this.hitWidth = 60;    
+            this.hitYOffset = 0;   
+            this.hitHeight = this.height - 80; 
         } else {
-            // УРНА
             this.width = 70;
             this.height = 130;
             this.y = GROUND_Y - this.height;
             this.type = 'trash';
             
-            // ХИТБОКС УРНЫ
             this.hitXOffset = 10;
             this.hitWidth = 50;
             this.hitYOffset = 20;
@@ -293,11 +317,11 @@ class Item {
         this.x = forceX || CANVAS_WIDTH;
         this.y = forceY || (GROUND_Y - player.normalHeight - 120); 
         
-        if (this.scoreValue === 1) { // ПИВО
+        if (this.scoreValue === 1) { 
             this.width = 35; this.height = 100; this.y -= 50;
-        } else if (this.scoreValue === 2) { // ЗИПЛОК
+        } else if (this.scoreValue === 2) { 
             this.width = 60; this.height = 60; this.y -= 20;
-        } else if (this.scoreValue === 5) { // БИЛЕТЫ
+        } else if (this.scoreValue === 5) { 
             this.width = 80; this.height = 50;
         }
     }
@@ -333,7 +357,7 @@ function handleSpawning() {
         items.push(new Item(5, CANVAS_WIDTH, GROUND_Y - player.normalHeight - 140));
         obstacles.push(new Obstacle(true, Math.random() > 0.5 ? 1 : 2));
         obstacles[obstacles.length-1].x = CANVAS_WIDTH + 350; 
-        spawnDistanceQueue = 900; // Огромная пауза после комбо 5 очков + коп
+        spawnDistanceQueue = 900; 
         lastObstacleWasTop = true;
         return;
     }
@@ -344,8 +368,10 @@ function handleSpawning() {
         if (lastObstacleWasTop) spawnTop = false;
         obstacles.push(new Obstacle(spawnTop, Math.random() > 0.5 ? 1 : 2));
         lastObstacleWasTop = spawnTop;
-        // ДИСТАНЦИЯ УВЕЛИЧЕНА, чтобы всегда можно было спастись
-        spawnDistanceQueue = Math.random() * 300 + 850; 
+        
+        // Дистанция зависит от скорости: чем быстрее игра, тем больше пикселей нужно между препятствиями
+        let speedMultiplier = gameSpeed / 5.0;
+        spawnDistanceQueue = (Math.random() * 300 + 850) * speedMultiplier; 
     } else {
         let scoreVal = Math.random() < 0.714 ? 1 : 2;
         items.push(new Item(scoreVal));
@@ -372,7 +398,7 @@ window.addEventListener('keydown', (e) => {
         if (gameState === 'PLAYING' || gameState === 'PAUSED') {
             togglePause();
         } else if (gameState === 'GAME_OVER' || gameState === 'WIN_ANIMATION') {
-            fullRestart(); // Рестарт по пробелу
+            fullRestart(); 
         }
     }
     if (gameState !== 'PLAYING') return;
@@ -426,7 +452,6 @@ function checkCollisions() {
     const ph = player.height;
 
     for (let obs of obstacles) {
-        // Проверка по правильным хитбоксам препятствия
         let ox = obs.x + obs.hitXOffset;
         let oy = obs.y + obs.hitYOffset;
         let ow = obs.hitWidth;
@@ -493,7 +518,11 @@ function fullRestart() {
     obstacles = [];
     items = [];
     spawnDistanceQueue = 300;
-    catX = CANVAS_WIDTH; // Сброс позиции кота
+    catX = CANVAS_WIDTH; 
+    
+    // Сброс скорости ПРИ ПОБЕДЕ ИЛИ GAME OVER
+    gameSpeed = 5.0; 
+    
     gameState = 'PLAYING';
     document.getElementById('win-screen').classList.add('hidden');
     document.getElementById('game-over-screen').classList.add('hidden');
@@ -519,21 +548,18 @@ function drawWinAnimation() {
     const offsetX = -40;
     
     if (catX <= player.x + player.width + 10) {
-        // Кот добежал -> ОБНИМАШКИ
         if (images.playerHug && images.playerHug.complete && images.playerHug.naturalHeight !== 0) {
             ctx.drawImage(images.playerHug, player.x + offsetX, player.y - 20 + floatY, drawW, drawH);
         } else {
             ctx.fillStyle = 'blue'; ctx.fillRect(player.x, player.y + floatY, player.width, player.normalHeight);
         }
     } else {
-        // Игрок ждет кота
         if (images.playerWait && images.playerWait.complete && images.playerWait.naturalHeight !== 0) {
             ctx.drawImage(images.playerWait, player.x + offsetX, player.y - 20 + floatY, drawW, drawH);
         } else {
             ctx.fillStyle = 'blue'; ctx.fillRect(player.x, player.y + floatY, player.width, player.normalHeight);
         }
         
-        // Кот бежит
         if (images.cat && images.cat.complete && images.cat.naturalHeight !== 0) {
             ctx.drawImage(images.cat, catX, player.y + 60 + floatY, 60, 60);
         } else {
@@ -550,7 +576,6 @@ function updateUI() {
 }
 
 function drawBackground() {
-    // В будущем здесь будут динамичные картинки леса и неба
     ctx.fillStyle = '#87CEEB';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.fillStyle = '#A9A9A9';
@@ -566,6 +591,13 @@ function gameLoop() {
     drawBackground();
 
     if (gameState === 'PLAYING') {
+        
+        // ИСПРАВЛЕНИЕ: ПОСТЕПЕННОЕ УВЕЛИЧЕНИЕ СКОРОСТИ
+        // Скорость растет каждый кадр понемногу, пока не достигнет MAX_SPEED
+        if (gameSpeed < MAX_SPEED) {
+            gameSpeed += SPEED_INCREMENT;
+        }
+
         handleSpawning();
         for (let i = obstacles.length - 1; i >= 0; i--) {
             obstacles[i].update();
@@ -579,8 +611,6 @@ function gameLoop() {
         }
         player.update();
         checkCollisions();
-        
-        if (frameCount % 600 === 0 && gameSpeed < 12) gameSpeed += 0.5;
 
     } else if (gameState === 'DEAD_ANIMATION') {
         obstacles.forEach(o => o.draw());
@@ -600,5 +630,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0456717b9583291',t:'MTc4MDIyNDQ2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a045958ae91723e3',t:'MTc4MDIyNjM3Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
