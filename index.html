@@ -8,12 +8,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { background-color: #222; color: white; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
-        /* ИСПРАВЛЕНИЕ: ОКОШКО ИГРЫ ТЕПЕРЬ ЗАНИМАЕТ ВЕСЬ ЭКРАН */
         #game-container { 
             position: relative; 
             width: 100vw; 
             height: 100vh; 
-            /* Убраны жесткие max-width и max-height, теперь игра масштабируется */
             background-color: #87CEEB; 
             overflow: hidden; 
             box-shadow: 0 0 20px rgba(0,0,0,0.8); 
@@ -81,6 +79,7 @@
     </div>
 
     <script>
+// ПОДКЛЮЧЕНИЕ ВСЕХ КАРТИНОК
 const IMAGES_SRC = {
     playerRun1: 'run1.png',
     playerRun2: 'run2.png',
@@ -93,7 +92,7 @@ const IMAGES_SRC = {
     item2: 'шпека.png',
     item5: 'билеты.png',
     obsBottom: 'урна.png',
-    obsTop1: 'Коп.png',
+    obsTop1: 'коп.png',  
     obsTop2: 'гоп.png',
     cat: 'cat.png',
     
@@ -114,13 +113,11 @@ for (let key in IMAGES_SRC) {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// ИСПРАВЛЕНИЕ: ДИНАМИЧЕСКИЙ РАЗМЕР ХОЛСТА (ПОД ЭКРАН)
 let CANVAS_WIDTH = window.innerWidth;
 let CANVAS_HEIGHT = window.innerHeight;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
-// Земля всегда находится на 85% высоты экрана
 let GROUND_Y = CANVAS_HEIGHT * 0.85;
 
 window.addEventListener('resize', () => {
@@ -137,18 +134,16 @@ let score = 0;
 let lives = 3;
 let frameCount = 0;
 
-// ИСПРАВЛЕНИЕ: ГЛОБАЛЬНАЯ СКОРОСТЬ
-// Теперь gameSpeed сохраняется глобально на всё время, пока открыта вкладка
-let gameSpeed = 5.0; // Стартовая, самая медленная скорость
-const MAX_SPEED = 14.0; // Максимальная скорость
-const SPEED_INCREMENT = 0.002; // Насколько скорость растет каждый кадр (очень плавно)
+let gameSpeed = 5.0; 
+const MAX_SPEED = 14.0; 
+const SPEED_INCREMENT = 0.002; 
 
 let obstacles = [];
 let items = [];
 
 class Player {
     constructor() {
-        this.x = CANVAS_WIDTH * 0.15; // Игрок всегда на 15% экрана слева
+        this.x = CANVAS_WIDTH * 0.15; 
         this.normalWidth = 60; 
         this.normalHeight = 120; 
         this.duckHeight = 60;    
@@ -240,15 +235,30 @@ class Player {
         
         if (this.isDead && images.playerDead && images.playerDead.complete && images.playerDead.naturalHeight !== 0) {
             ctx.drawImage(images.playerDead, this.x + offsetX, this.y + offsetY, drawW, drawH);
+        } else if (this.isDucking && images.playerDuck && images.playerDuck.complete && images.playerDuck.naturalHeight !== 0) {
+            ctx.drawImage(images.playerDuck, this.x + offsetX, this.y + offsetY, drawW, drawH);
+        } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
+            ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
+            
+            // ВЫБОР КАДРА БЕГА
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
+            
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
-                // ЕСЛИ РИСУЕТСЯ ВТОРОЙ КАДР, МЫ МОЖЕМ ЕГО ПОДОГНАТЬ
-                let tweakX = (runImg === images.playerRun2) ? 0 : 0; 
-                let tweakY = (runImg === images.playerRun2) ? 0 : 0; 
-                let tweakW = (runImg === images.playerRun2) ? 0 : 0;
+                // ПРОГРАММНАЯ ПОДГОНКА ВТОРОГО КАДРА (ЧТОБЫ НЕ МОРГАЛ И НЕ СУЖАЛСЯ)
+                // Если рисуется run2, мы делаем его чуть меньше и сдвигаем правее/ниже.
+                // ЭТИ ЦИФРЫ МОЖНО МЕНЯТЬ!
+                let tweakX = (runImg === images.playerRun2) ? 10 : 0;  // Сдвиг вправо
+                let tweakY = (runImg === images.playerRun2) ? 5 : 0;   // Сдвиг вниз
+                let tweakW = (runImg === images.playerRun2) ? -20 : 0; // Сжимаем его на 20px
                 
-                ctx.drawImage(runImg, this.x + offsetX + tweakX, this.y + offsetY + tweakY, drawW + tweakW, drawH + tweakW);
+                ctx.drawImage(
+                    runImg, 
+                    this.x + offsetX + tweakX, 
+                    this.y + offsetY + tweakY, 
+                    drawW + tweakW, 
+                    drawH + tweakW
+                );
             } else {
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -370,7 +380,6 @@ function handleSpawning() {
         obstacles.push(new Obstacle(spawnTop, Math.random() > 0.5 ? 1 : 2));
         lastObstacleWasTop = spawnTop;
         
-        // Дистанция зависит от скорости: чем быстрее игра, тем больше пикселей нужно между препятствиями
         let speedMultiplier = gameSpeed / 5.0;
         spawnDistanceQueue = (Math.random() * 300 + 850) * speedMultiplier; 
     } else {
@@ -521,7 +530,6 @@ function fullRestart() {
     spawnDistanceQueue = 300;
     catX = CANVAS_WIDTH; 
     
-    // Сброс скорости ПРИ ПОБЕДЕ ИЛИ GAME OVER
     gameSpeed = 5.0; 
     
     gameState = 'PLAYING';
@@ -593,8 +601,6 @@ function gameLoop() {
 
     if (gameState === 'PLAYING') {
         
-        // ИСПРАВЛЕНИЕ: ПОСТЕПЕННОЕ УВЕЛИЧЕНИЕ СКОРОСТИ
-        // Скорость растет каждый кадр понемногу, пока не достигнет MAX_SPEED
         if (gameSpeed < MAX_SPEED) {
             gameSpeed += SPEED_INCREMENT;
         }
@@ -631,5 +637,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a045958ae91723e3',t:'MTc4MDIyNjM3Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a045dfdc9cf41add',t:'MTc4MDIyOTQxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
