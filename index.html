@@ -240,14 +240,15 @@ class Player {
         
         if (this.isDead && images.playerDead && images.playerDead.complete && images.playerDead.naturalHeight !== 0) {
             ctx.drawImage(images.playerDead, this.x + offsetX, this.y + offsetY, drawW, drawH);
-        } else if (this.isDucking && images.playerDuck && images.playerDuck.complete && images.playerDuck.naturalHeight !== 0) {
-            ctx.drawImage(images.playerDuck, this.x + offsetX, this.y + offsetY, drawW, drawH);
-        } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
-            ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
-                ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
+                // ЕСЛИ РИСУЕТСЯ ВТОРОЙ КАДР, МЫ МОЖЕМ ЕГО ПОДОГНАТЬ
+                let tweakX = (runImg === images.playerRun2) ? 0 : 0; 
+                let tweakY = (runImg === images.playerRun2) ? 0 : 0; 
+                let tweakW = (runImg === images.playerRun2) ? 0 : 0;
+                
+                ctx.drawImage(runImg, this.x + offsetX + tweakX, this.y + offsetY + tweakY, drawW + tweakW, drawH + tweakW);
             } else {
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
