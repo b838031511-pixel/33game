@@ -18,11 +18,13 @@
         }
         canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
         
+        /* ИСПРАВЛЕНИЕ: ВЫВЕСКА МЕЧТА ПО ЦЕНТРУ СВЕРХУ */
         #park-sign { 
             position: absolute; 
             top: 10px; 
-            right: 20px; 
-            width: 300px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px; 
             height: auto;
             pointer-events: none; 
             z-index: 5; 
@@ -46,7 +48,7 @@
         
         @media (max-width: 800px) { 
             #ui-layer { font-size: 20px; } 
-            #park-sign { width: 200px; right: 10px; } 
+            #park-sign { width: 250px; } 
             .control-btn { font-size: 16px; padding: 15px 20px; } 
             #controls { padding: 0 10px; }
         }
@@ -54,6 +56,7 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- Вывеска МЕЧТА теперь по центру -->
         <img id="park-sign" src="Мечта.png" alt="Мечта">
         
         <canvas id="gameCanvas"></canvas>
@@ -104,8 +107,9 @@ const IMAGES_SRC = {
     obsTop2: 'гоп.png',
     cat: 'cat.png',
     
-    bgSky: 'ФонС.png',      
-    bgPath: 'беседка.png'   
+    // ФОНЫ
+    bgSky: 'беседка.png',   // Динамичный фон (беседки и хрущевки)
+    bgPath: 'ФонС.png'      // Статичные кусты по краям экрана
 };
 
 const images = {};
@@ -249,9 +253,17 @@ class Player {
         } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
             ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
         } else if (!this.isDead && !this.isJumping && !this.isDucking) {
+            
             let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
+            
             if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
-                ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
+                ctx.drawImage(
+                    runImg, 
+                    this.x + offsetX, 
+                    this.y + offsetY, 
+                    drawW, 
+                    drawH
+                );
             } else {
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -577,41 +589,45 @@ function updateUI() {
     document.getElementById('lives').innerText = hearts;
 }
 
-let skyOffset = 0;
-let pathOffset = 0;
+// ПЕРЕМЕННЫЕ ДЛЯ ФОНОВ
+let bgOffset = 0; // Для динамичной беседки
 
 function drawBackground() {
+    // 1. Очищаем холст темно-синим цветом (ночное небо)
     ctx.fillStyle = '#0b1a30';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
-    if (gameState === 'PLAYING') skyOffset -= gameSpeed * 0.2;
+    // 2. ДИНАМИЧНЫЙ ФОН: Беседка едет по всему экрану (от неба до земли)
+    if (gameState === 'PLAYING') bgOffset -= gameSpeed;
     
     if (images.bgSky && images.bgSky.complete && images.bgSky.naturalHeight !== 0) {
+        // Подгоняем размер Беседки так, чтобы низ картинки был ровно на линии GROUND_Y
+        let drawH = CANVAS_HEIGHT * 0.85; // Она занимает высоту от верха экрана до земли
         let imgAspect = images.bgSky.width / images.bgSky.height;
-        let drawH = CANVAS_HEIGHT;
         let drawW = drawH * imgAspect;
         
-        if (skyOffset <= -drawW) skyOffset = 0; 
+        // Зацикливаем
+        if (bgOffset <= -drawW) bgOffset = 0; 
         
-        ctx.drawImage(images.bgSky, skyOffset, 0, drawW, drawH);
-        ctx.drawImage(images.bgSky, skyOffset + drawW, 0, drawW, drawH); 
+        ctx.drawImage(images.bgSky, bgOffset, 0, drawW, drawH);
+        ctx.drawImage(images.bgSky, bgOffset + drawW, 0, drawW, drawH); 
     }
 
-    if (gameState === 'PLAYING') pathOffset -= gameSpeed;
-    
+    // 3. ЗЕМЛЯ (под кнопками) - Заливаем коричневым цветом
+    ctx.fillStyle = '#4a2f1d';
+    ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+
+    // 4. СТАТИЧНЫЙ ФОН: Кусты ФонС.png по краям экрана
     if (images.bgPath && images.bgPath.complete && images.bgPath.naturalHeight !== 0) {
-        let drawH = CANVAS_HEIGHT * 0.5; 
-        let imgAspect = images.bgPath.width / images.bgPath.height;
-        let drawW = drawH * imgAspect;
-        let drawY = GROUND_Y - drawH + 30; 
+        let drawH = 150; // Высота кустов
+        let drawW = 150 * (images.bgPath.width / images.bgPath.height);
+        let drawY = GROUND_Y - drawH + 20; // Кусты растут из земли
         
-        if (pathOffset <= -drawW) pathOffset = 0; 
+        // Рисуем куст СЛЕВА (статично)
+        ctx.drawImage(images.bgPath, 0, drawY, drawW, drawH);
         
-        ctx.drawImage(images.bgPath, pathOffset, drawY, drawW, drawH);
-        ctx.drawImage(images.bgPath, pathOffset + drawW, drawY, drawW, drawH); 
-    } else {
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+        // Рисуем куст СПРАВА (статично)
+        ctx.drawImage(images.bgPath, CANVAS_WIDTH - drawW, drawY, drawW, drawH);
     }
 }
 
@@ -657,5 +673,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0464ed5de755925',t:'MTc4MDIzMzk2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0466193f9cc910e',t:'MTc4MDIzNDcyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
