@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Платформер "Мечта"</title>
+    <!-- ИСПРАВЛЕНИЕ: НАЗВАНИЕ ВКЛАДКИ БРАУЗЕРА -->
+    <title>Иисусий возраст</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { background-color: #222; color: white; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -20,8 +21,8 @@
         .control-btn:active { background: rgba(255, 255, 255, 0.6); }
         
         #win-screen, #game-over-screen, #pause-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
-        #win-screen h1, #game-over-screen h1, #pause-screen h1 { font-size: 50px; color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
-        #win-screen p, #game-over-screen p, #pause-screen p { font-size: 24px; margin-bottom: 30px; }
+        #win-screen h1, #game-over-screen h1, #pause-screen h1 { font-size: 50px; color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; text-align: center;}
+        #win-screen p, #game-over-screen p, #pause-screen p { font-size: 24px; margin-bottom: 30px; text-align: center;}
         #win-screen button, #game-over-screen button { background: #FFD700; color: #000; border: none; padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.2s; }
         #win-screen button:hover, #game-over-screen button:hover { background: #FFF; }
         
@@ -55,32 +56,43 @@
         <div id="win-screen" class="hidden">
             <h1>ПОБЕДА!</h1>
             <p>Вы набрали 33 очка!</p>
-            <button id="btn-restart">Играть заново</button>
+            <button id="btn-restart">Играть заново (Пробел)</button>
         </div>
         
         <div id="game-over-screen" class="hidden">
             <h1>ИГРА ОКОНЧЕНА</h1>
             <p>Вы потратили все жизни.</p>
-            <button id="btn-restart-fail">Попробовать снова</button>
+            <button id="btn-restart-fail">Попробовать снова (Пробел)</button>
         </div>
     </div>
 
     <script>
-// ЗАГРУЗИЛИ БУТЫЛКУ (Убрали зависимость от успешной предзагрузки для старта)
+// ПОДКЛЮЧЕНИЕ ВСЕХ КАРТИНОК
 const IMAGES_SRC = {
-    playerRun: 'run.png',
+    playerRun1: 'run1.png',
+    playerRun2: 'run2.png',
     playerJump: 'jump.png',
     playerDuck: 'seat.png',
+    playerDead: 'dead.png',
+    playerWait: 'wait.png',
+    playerHug: 'hug.png',
     item1: 'приз.png',
+    item2: 'шпека.png',
+    item5: 'билеты.png',
+    obsBottom: 'урна.png',
+    obsTop1: 'коп.png',
+    obsTop2: 'гоп.png',
+    cat: 'cat.png',
     
-    bgSky: null, bgCity: null, bgPath: null, playerDead: null,
-    item2: null, item5: null, obsBottom: null, obsTop1: null, obsTop2: null, cat: null
+    bgSky: null, bgCity: null, bgPath: null
 };
 
 const images = {};
 for (let key in IMAGES_SRC) {
     if (IMAGES_SRC[key]) {
-        let img = new Image(); img.src = IMAGES_SRC[key]; images[key] = img;
+        let img = new Image(); 
+        img.src = IMAGES_SRC[key]; 
+        images[key] = img;
     } else {
         images[key] = null;
     }
@@ -108,13 +120,13 @@ let items = [];
 class Player {
     constructor() {
         this.x = 150;
-        this.normalWidth = 60; // Возвращаем строгие хитбоксы, чтобы было честно играть
-        this.normalHeight = 120;
-        this.duckHeight = 60; 
+        this.normalWidth = 60; // Строгий хитбокс по ширине
+        this.normalHeight = 120; // Строгий хитбокс стоя
+        this.duckHeight = 60;    // Строгий хитбокс сидя
         
         this.width = this.normalWidth;
         this.height = this.normalHeight;
-        this.y = GROUND_Y - this.normalHeight; // ИСПРАВЛЕНИЕ: точная позиция старта
+        this.y = GROUND_Y - this.normalHeight;
         
         this.vy = 0;
         this.gravity = 0.6;
@@ -192,28 +204,29 @@ class Player {
             ctx.translate(-(this.x + this.width/2), -(this.y + this.height/2));
         }
         
-        // Размеры картинок для правильных пропорций (шире хитбокса)
-        const drawW = 120; 
-        const drawH = 120;
-        const offsetX = -30; // Центрируем широкую картинку относительно узкого хитбокса
-        const offsetY = this.isDucking ? -60 : 0; // Приподнимаем присевшего, чтобы он не провалился
+        const drawW = 140; // Ширина картинки (больше хитбокса)
+        const drawH = 140; // Высота картинки
+        const offsetX = -40; // Сдвиг влево для центрирования
+        const offsetY = this.isDucking ? -80 : -20; // Сдвиг вверх
         
-        // ИСПРАВЛЕНИЕ: Добавили playerDead для анимации смерти
-        if (this.isDead && images.playerDead && images.playerDead.complete) {
+        if (this.isDead && images.playerDead && images.playerDead.complete && images.playerDead.naturalHeight !== 0) {
             ctx.drawImage(images.playerDead, this.x + offsetX, this.y + offsetY, drawW, drawH);
-        } else if (this.isDucking && images.playerDuck && images.playerDuck.complete) {
+        } else if (this.isDucking && images.playerDuck && images.playerDuck.complete && images.playerDuck.naturalHeight !== 0) {
             ctx.drawImage(images.playerDuck, this.x + offsetX, this.y + offsetY, drawW, drawH);
-        } else if (this.isJumping && images.playerJump && images.playerJump.complete) {
-            // Прыжок шире, даем ему больше ширины
-            ctx.drawImage(images.playerJump, this.x - 40, this.y, 140, drawH);
-        } else if (!this.isDead && !this.isJumping && !this.isDucking && images.playerRun && images.playerRun.complete) {
-            ctx.drawImage(images.playerRun, this.x + offsetX, this.y + offsetY, drawW, drawH);
+        } else if (this.isJumping && images.playerJump && images.playerJump.complete && images.playerJump.naturalHeight !== 0) {
+            ctx.drawImage(images.playerJump, this.x + offsetX, this.y + offsetY, drawW, drawH);
+        } else if (!this.isDead && !this.isJumping && !this.isDucking) {
+            // Анимация бега (смена двух кадров каждые 10 тиков)
+            let runImg = (frameCount % 20 < 10) ? images.playerRun1 : images.playerRun2;
+            if (runImg && runImg.complete && runImg.naturalHeight !== 0) {
+                ctx.drawImage(runImg, this.x + offsetX, this.y + offsetY, drawW, drawH);
+            } else {
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
         } else {
-            // Квадратики смерти теперь работают!
-            ctx.fillStyle = this.isDead ? 'red' : (this.isDucking ? 'purple' : 'blue');
+            ctx.fillStyle = 'blue';
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = '#ffcc99';
-            ctx.fillRect(this.x - 10, this.y - (this.isDucking?10:20), this.width + 20, this.isDucking?40:60);
         }
         
         ctx.restore();
@@ -225,15 +238,29 @@ class Obstacle {
         this.isTop = isTop;
         this.x = CANVAS_WIDTH;
         if (this.isTop) {
-            this.width = 80;
-            this.height = GROUND_Y - player.duckHeight - 10; 
-            this.y = GROUND_Y - this.height - player.duckHeight - 10;
+            // КОП И ГОП (Огромные, стоят на земле)
+            this.width = 160; 
+            this.height = 320; 
+            this.y = GROUND_Y - this.height; // Стоят ровно на земле
             this.type = type === 1 ? 'police' : 'drunk';
+            
+            // ХИТБОКС (только туловище, ноги безопасны для проезда)
+            this.hitXOffset = 50;  // Отступ слева от края картинки
+            this.hitWidth = 60;    // Ширина самого тела для удара
+            this.hitYOffset = 0;   // От макушки
+            this.hitHeight = this.height - 80; // Снизу 80 пикселей пустоты, чтобы игрок мог проехать
         } else {
-            this.width = 60;
+            // УРНА
+            this.width = 70;
             this.height = 130;
             this.y = GROUND_Y - this.height;
             this.type = 'trash';
+            
+            // ХИТБОКС УРНЫ
+            this.hitXOffset = 10;
+            this.hitWidth = 50;
+            this.hitYOffset = 20;
+            this.hitHeight = 110;
         }
     }
     update() {
@@ -241,15 +268,22 @@ class Obstacle {
     }
     draw() {
         if (this.isTop) {
-            ctx.fillStyle = this.type === 'police' ? '#00008B' : '#8B4513';
+            let img = this.type === 'police' ? images.obsTop1 : images.obsTop2;
+            if (img && img.complete && img.naturalHeight !== 0) {
+                ctx.drawImage(img, this.x, this.y, this.width, this.height);
+            } else {
+                ctx.fillStyle = this.type === 'police' ? '#00008B' : '#8B4513';
+                ctx.fillRect(this.x + this.hitXOffset, this.y + this.hitYOffset, this.hitWidth, this.hitHeight);
+            }
         } else {
-            ctx.fillStyle = '#555';
+            let img = images.obsBottom;
+            if (img && img.complete && img.naturalHeight !== 0) {
+                ctx.drawImage(img, this.x, this.y, this.width, this.height);
+            } else {
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.x + this.hitXOffset, this.y + this.hitYOffset, this.hitWidth, this.hitHeight);
+            }
         }
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        
-        ctx.fillStyle = 'white';
-        ctx.font = '14px Arial';
-        ctx.fillText(this.isTop ? (this.type==='police'?'Коп':'Алкаш') : 'Урна', this.x + 5, this.y + 30);
     }
 }
 
@@ -258,26 +292,29 @@ class Item {
         this.scoreValue = scoreValue;
         this.x = forceX || CANVAS_WIDTH;
         this.y = forceY || (GROUND_Y - player.normalHeight - 120); 
-        this.width = (this.scoreValue === 1 && images.item1) ? 35 : 40;
         
-        // Для бутылки пива делаем пропорции более вытянутыми
-        this.height = (this.scoreValue === 1 && images.item1) ? 100 : 40; 
-        if (this.scoreValue === 1 && images.item1) this.y -= 60; 
+        if (this.scoreValue === 1) { // ПИВО
+            this.width = 35; this.height = 100; this.y -= 50;
+        } else if (this.scoreValue === 2) { // ЗИПЛОК
+            this.width = 60; this.height = 60; this.y -= 20;
+        } else if (this.scoreValue === 5) { // БИЛЕТЫ
+            this.width = 80; this.height = 50;
+        }
     }
     update() {
         if (gameState === 'PLAYING') this.x -= gameSpeed;
     }
     draw() {
-        if (this.scoreValue === 1 && images.item1 && images.item1.complete && images.item1.naturalHeight !== 0) {
-            ctx.drawImage(images.item1, this.x, this.y, this.width, this.height);
+        let img = null;
+        if (this.scoreValue === 1) img = images.item1;
+        if (this.scoreValue === 2) img = images.item2;
+        if (this.scoreValue === 5) img = images.item5;
+        
+        if (img && img.complete && img.naturalHeight !== 0) {
+            ctx.drawImage(img, this.x, this.y, this.width, this.height);
         } else {
-            if (this.scoreValue === 1) ctx.fillStyle = 'lightgreen';
-            else if (this.scoreValue === 2) ctx.fillStyle = 'white';
-            else if (this.scoreValue === 5) ctx.fillStyle = 'gold';
-            
+            ctx.fillStyle = this.scoreValue === 1 ? 'lightgreen' : (this.scoreValue === 2 ? 'white' : 'gold');
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = 'black';
-            ctx.fillText(`+${this.scoreValue}`, this.x + 5, this.y + 25);
         }
     }
 }
@@ -293,27 +330,26 @@ function handleSpawning() {
 
     const r = Math.random();
     if (r < 0.03) {
-        items.push(new Item(5, CANVAS_WIDTH, GROUND_Y - player.normalHeight - 130));
+        items.push(new Item(5, CANVAS_WIDTH, GROUND_Y - player.normalHeight - 140));
         obstacles.push(new Obstacle(true, Math.random() > 0.5 ? 1 : 2));
         obstacles[obstacles.length-1].x = CANVAS_WIDTH + 350; 
-        spawnDistanceQueue = 600;
+        spawnDistanceQueue = 900; // Огромная пауза после комбо 5 очков + коп
         lastObstacleWasTop = true;
         return;
     }
 
-     const typeRoll = Math.random();
+    const typeRoll = Math.random();
     if (typeRoll < 0.6) {
         let spawnTop = Math.random() > 0.5;
         if (lastObstacleWasTop) spawnTop = false;
         obstacles.push(new Obstacle(spawnTop, Math.random() > 0.5 ? 1 : 2));
         lastObstacleWasTop = spawnTop;
-        // БЫЛО: Math.random() * 200 + 400;
-        // СТАЛО: (Минимум 600 пикселей между препятствиями)
-        spawnDistanceQueue = Math.random() * 200 + 600; 
+        // ДИСТАНЦИЯ УВЕЛИЧЕНА, чтобы всегда можно было спастись
+        spawnDistanceQueue = Math.random() * 300 + 850; 
     } else {
         let scoreVal = Math.random() < 0.714 ? 1 : 2;
         items.push(new Item(scoreVal));
-        spawnDistanceQueue = Math.random() * 150 + 200;
+        spawnDistanceQueue = Math.random() * 200 + 300;
         lastObstacleWasTop = false;
     }
 }
@@ -336,10 +372,9 @@ window.addEventListener('keydown', (e) => {
         if (gameState === 'PLAYING' || gameState === 'PAUSED') {
             togglePause();
         } else if (gameState === 'GAME_OVER' || gameState === 'WIN_ANIMATION') {
-            fullRestart(); // Рестарт по пробелу после смерти/победы
+            fullRestart(); // Рестарт по пробелу
         }
     }
-    // ... остальной код (прыжок и присед)
     if (gameState !== 'PLAYING') return;
 
     if (e.code === 'ArrowUp' || e.code === 'KeyW') player.jump();
@@ -385,13 +420,19 @@ document.getElementById('btn-restart-fail').addEventListener('click', fullRestar
 function checkCollisions() {
     if (player.isDead || gameState !== 'PLAYING') return;
 
-    const px = player.x + 10;
-    const py = player.y + 10;
-    const pw = player.width - 20;
-    const ph = player.height - 20;
+    const px = player.x;
+    const py = player.y;
+    const pw = player.width;
+    const ph = player.height;
 
     for (let obs of obstacles) {
-        if (px < obs.x + obs.width && px + pw > obs.x && py < obs.y + obs.height && py + ph > obs.y) {
+        // Проверка по правильным хитбоксам препятствия
+        let ox = obs.x + obs.hitXOffset;
+        let oy = obs.y + obs.hitYOffset;
+        let ow = obs.hitWidth;
+        let oh = obs.hitHeight;
+        
+        if (px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy) {
             die();
             return;
         }
@@ -452,6 +493,7 @@ function fullRestart() {
     obstacles = [];
     items = [];
     spawnDistanceQueue = 300;
+    catX = CANVAS_WIDTH; // Сброс позиции кота
     gameState = 'PLAYING';
     document.getElementById('win-screen').classList.add('hidden');
     document.getElementById('game-over-screen').classList.add('hidden');
@@ -472,16 +514,32 @@ function drawWinAnimation() {
     if (catX > player.x + player.width + 10) catX -= 4;
     const floatY = Math.sin(frameCount * 0.1) * 3;
     
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(player.x, player.y + floatY, player.width, player.normalHeight);
+    const drawW = 140; 
+    const drawH = 140;
+    const offsetX = -40;
     
-    ctx.fillStyle = '#ffcc99';
-    ctx.fillRect(player.x - 10, player.y - 20 + floatY, player.width + 20, 60);
-    
-    ctx.fillStyle = 'orange';
-    ctx.fillRect(catX, player.y + player.normalHeight - 30 + floatY, 40, 30);
-    ctx.fillStyle = 'black';
-    ctx.fillText('Мяу', catX, player.y + player.normalHeight - 35 + floatY);
+    if (catX <= player.x + player.width + 10) {
+        // Кот добежал -> ОБНИМАШКИ
+        if (images.playerHug && images.playerHug.complete && images.playerHug.naturalHeight !== 0) {
+            ctx.drawImage(images.playerHug, player.x + offsetX, player.y - 20 + floatY, drawW, drawH);
+        } else {
+            ctx.fillStyle = 'blue'; ctx.fillRect(player.x, player.y + floatY, player.width, player.normalHeight);
+        }
+    } else {
+        // Игрок ждет кота
+        if (images.playerWait && images.playerWait.complete && images.playerWait.naturalHeight !== 0) {
+            ctx.drawImage(images.playerWait, player.x + offsetX, player.y - 20 + floatY, drawW, drawH);
+        } else {
+            ctx.fillStyle = 'blue'; ctx.fillRect(player.x, player.y + floatY, player.width, player.normalHeight);
+        }
+        
+        // Кот бежит
+        if (images.cat && images.cat.complete && images.cat.naturalHeight !== 0) {
+            ctx.drawImage(images.cat, catX, player.y + 60 + floatY, 60, 60);
+        } else {
+            ctx.fillStyle = 'orange'; ctx.fillRect(catX, player.y + player.normalHeight - 30 + floatY, 40, 30);
+        }
+    }
 }
 
 function updateUI() {
@@ -491,9 +549,8 @@ function updateUI() {
     document.getElementById('lives').innerText = hearts;
 }
 
-let bgOffset = 0;
 function drawBackground() {
-    // В будущем тут будут твои картинки (bgSky, bgCity, bgPath)
+    // В будущем здесь будут динамичные картинки леса и неба
     ctx.fillStyle = '#87CEEB';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.fillStyle = '#A9A9A9';
@@ -543,5 +600,5 @@ function gameLoop() {
 updateUI();
 gameLoop();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0367b94db33eed5',t:'MTc4MDA2ODAyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0456717b9583291',t:'MTc4MDIyNDQ2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
